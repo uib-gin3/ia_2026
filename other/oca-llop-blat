@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
+from copy import deepcopy
 
 class OcaLlopBlat():
     
     def __init__(self):
         """ Inicialitza l'estat, indicant cada cosa si esta a illa 0 o 1"""
-
         self.estat = {
             "pages": 0,
             "llop": 0,
@@ -13,16 +13,85 @@ class OcaLlopBlat():
             "blat": 0,
         }
 
+        self.cami = []
+
+    def __eq__(a, b):
+        print(f"Comparant: {a} i {b}")
+        for personatge in a.estat.keys():
+            if a.estat[personatge] != b.estat[personatge]:
+                print("Son diferents")
+                return False
+
+        print("Son iguals")
+        return True
+
+
+    def __contains__(a, b):
+        for estat in a.cami:
+            if estat == b:
+                return True
+        return False
+
+
+    def __repr__(self):
+
+        output = ""
+
+        for element, illa in self.estat.items():
+            if illa == 0:
+                output += element[0].upper() + ""
+
+        output += "~"
+        for element, illa in self.estat.items():
+            if illa == 1:
+                output += element[0].upper() + ""
+
+        return output
+        
+
     def accio_transporta(self, element=None):
         """
         " Transporta l'element passat per paràmetre
         " o bé només el pages si no se passa cap elemet.
         """
+        element = element or "pages"
+
+        print(f"Intentant transportar {element}")
+        if self.estat["pages"] != self.estat[element]:
+            print(f"Falla! {element} no esta a la mateixa illa")
+            return False
+
         self.estat["pages"] = not self.estat["pages"]
-        self.estat[element] = not self.estat[element]
+        if element != "pages":
+            self.estat[element] = not self.estat[element]
+            print(f"Transportat {element} a {self.estat[element]}")
+        else:
+            print(f"Transportat pages")
+
+        return True
 
 
-    def valida(self):
+    def seguent(self):
+        print(f"Fent següent de {self}")
+        for element in ["pages", "llop", "oca", "blat"]:
+            print(element)
+            s = deepcopy(self)
+            if s.accio_transporta(element):
+                if self != s:
+                    if s not in self:
+                        if s.ningu_menja_ningu():
+                            s.cami.append(s)
+                            if s.final():
+                                print("Arribat!")
+                            print("No es final")
+                            return s.seguent()
+                        print("A")
+                    print("B")
+                print("C")
+            print("D")
+
+                    
+    def ningu_menja_ningu(self):
         """
         " Mira si algú s'ha menjat algú
         """
@@ -39,6 +108,7 @@ class OcaLlopBlat():
             print("Oca sola amb blat: nyam!")
             return False
 
+        print("Ningu menja ningu")
         return True
 
 
@@ -46,23 +116,8 @@ class OcaLlopBlat():
         """
         " Mira si hem arribat al final aconseguit l'objectiu
         """
-        return 0 not in self.stat.values()
+        return 0 not in self.estat.values()
 
-    def __repr__(self):
-
-        output = "illa 0: "
-
-        for element, illa in self.estat.items():
-            if illa == 0:
-                output += element[0].upper() + " "
-
-        output += "~ ~ "
-        for element, illa in self.estat.items():
-            if illa == 1:
-                output += element[0].upper() + " "
-
-        output += " :illa 1"
-        return output
 
 
 
@@ -86,6 +141,7 @@ Es possible que tots creuin? Com?
     olb = OcaLlopBlat()
 
     print(olb)
+    olb.seguent()
 
 
 
