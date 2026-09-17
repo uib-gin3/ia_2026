@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+
+class OcaLlopBlat():
+    
+    def __init__(self):
+        """ Inicialitza l'estat, indicant cada cosa si esta a illa 0 o 1"""
+
+        self.estat = {
+            "pages": 0,
+            "llop": 0,
+            "oca": 0,
+            "blat": 0,
+        }
+
+    def accio_transporta(self, element=None):
+        """
+        " Transporta l'element passat per paràmetre
+        " o bé només el pages si no se passa cap elemet.
+        """
+        self.estat["pages"] = not self.estat["pages"]
+        self.estat[element] = not self.estat[element]
+
+
+    def valida(self):
+        """
+        " Mira si algú s'ha menjat algú
+        """
+        llop = self.estat["llop"]
+        oca = self.estat["oca"]
+        pages = self.estat["pages"]
+        blat = self.estat["blat"]
+
+        if llop == oca and pages != llop and blat != llop:
+            print("Llop sol amb l'oca: nyam!")
+            return False
+
+        if oca == blat and pages != oca and llop != oca:
+            print("Oca sola amb blat: nyam!")
+            return False
+
+        return True
+
+
+    def final(self):
+        """
+        " Mira si hem arribat al final aconseguit l'objectiu
+        """
+        return 0 not in self.stat.values()
+
+    def __repr__(self):
+
+        output = "illa 0: "
+
+        for element, illa in self.estat.items():
+            if illa == 0:
+                output += element[0].upper() + " "
+
+        output += "~ ~ "
+        for element, illa in self.estat.items():
+            if illa == 1:
+                output += element[0].upper() + " "
+
+        output += " :illa 1"
+        return output
+
+
+
+
+if __name__=='__main__':
+    print("""Oca llop blat
+
+Un pages esta a una illa on hi ha una oca una llop i blat.
+
+Tots han de creuar a l'altre illa.
+
+El pages es l'unic que pot dur la barca i només pot transportar una cosa a la vegada.
+
+Si el llop queda sol amb l'oca se la menja.
+
+Si l'oca queda sola amb el blat se'l menja.
+
+Es possible que tots creuin? Com?
+    """)
+
+    olb = OcaLlopBlat()
+
+    print(olb)
+
+
+
