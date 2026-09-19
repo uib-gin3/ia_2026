@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from copy import deepcopy
+import sys
 
 DEBUG = False
 EMOJIS = True
@@ -16,9 +16,9 @@ SOLUCIONS = 0
 
 class OcaLlopBlat():
     
-    def __init__(self):
+    def __init__(self, estat=None, cami=None, solucio=None):
         """ Inicialitza l'estat, indicant cada cosa si esta a l'illa final o no """
-        self.estat = {
+        self.estat = estat or {
             "pages": False,
             "oca": False,
             "llop": False,
@@ -26,10 +26,10 @@ class OcaLlopBlat():
         }
 
         # Llistat de moviments
-        self.solucio = []
+        self.solucio = solucio or []
 
-        # Estats o camí de l'arbre
-        self.cami = []
+        # Cami d'estats fins la solució
+        self.cami = cami or []
 
 
     def __eq__(self, item):
@@ -51,7 +51,10 @@ class OcaLlopBlat():
 
     def __repr__(self):
 
-        output = list("    🌊    ")
+        output = list("    ~    ")
+        
+        if EMOJIS:
+            output[4] = '🌊'
 
         elements = list(representacio.keys())
 
@@ -128,11 +131,20 @@ class OcaLlopBlat():
             print(f"Fent següents de {self}")
 
         for element in ["pages", "llop", "oca", "blat"]:
-            s = deepcopy(self)
+            # Important genera objectes nous dict, list per evitar
+            # passar els punters ja que sinó als objecres següents
+            # se modifiquen les referències.
+            s = OcaLlopBlat(
+                dict(self.estat),
+                list(self.cami), 
+                list(self.solucio),
+            )
             if s.accio_transporta(element):
 
                 carrega = representacio[element] if element != "pages" else ""
-                carrega = carrega or "" if EMOJIS else "res"
+
+                if carrega == 'res' and not EMIJIS:
+                    carrega = ""
 
                 accio = f"🛥️  🧑{carrega}" if EMOJIS else f"duu {carrega}"
 
@@ -153,6 +165,7 @@ class OcaLlopBlat():
                         print(f"  {entorn}")
                         print(f"      {moviment}")
                         print("-------------------")
+                    print("")
                     continue
 
                 if self == s:
