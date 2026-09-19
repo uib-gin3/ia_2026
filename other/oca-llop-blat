@@ -2,51 +2,64 @@
 
 from copy import deepcopy
 
+DEBUG = False
+EMOJIS = True
+
+representacio = {
+    "pages": "🧑" if EMOJIS else "P",
+    "oca": "🪿" if EMOJIS else "O",
+    "llop": "🦊" if EMOJIS else "L",
+    "blat": "🌾"if EMOJIS else "B",
+}
+
+SOLUCIONS = 0
+
 class OcaLlopBlat():
     
     def __init__(self):
-        """ Inicialitza l'estat, indicant cada cosa si esta a illa 0 o 1"""
+        """ Inicialitza l'estat, indicant cada cosa si esta a l'illa final o no """
         self.estat = {
-            "pages": 0,
-            "llop": 0,
-            "oca": 0,
-            "blat": 0,
+            "pages": False,
+            "oca": False,
+            "llop": False,
+            "blat": False,
         }
 
+        # Llistat de moviments
+        self.solucio = []
+
+        # Estats o camí de l'arbre
         self.cami = []
 
-    def __eq__(a, b):
-        print(f"Comparant: {a} i {b}")
-        for personatge in a.estat.keys():
-            if a.estat[personatge] != b.estat[personatge]:
-                print("Son diferents")
-                return False
 
-        print("Son iguals")
-        return True
+    def __eq__(self, item):
+        if DEBUG:
+            print(f"Comparant: {self} i {item}")
+
+        return self.estat == item.estat 
 
 
-    def __contains__(a, b):
-        for estat in a.cami:
-            if estat == b:
+    def __contains__(self, item):
+        if DEBUG:
+            print(f"{item.estat}  dins  {self.cami}?")
+
+        for element in self.cami:
+            if element.estat == item.estat:
                 return True
         return False
 
 
     def __repr__(self):
 
-        output = ""
+        output = list("    🌊    ")
 
-        for element, illa in self.estat.items():
-            if illa == 0:
-                output += element[0].upper() + ""
+        elements = list(representacio.keys())
 
-        output += "~"
-        for element, illa in self.estat.items():
-            if illa == 1:
-                output += element[0].upper() + ""
+        for e in elements:
+            posicio = elements.index(e) + (self.estat[e] * (len(elements) + 1))
+            output[posicio] = representacio[e] 
 
-        return output
+        return "".join(output)
         
 
     def accio_transporta(self, element=None):
@@ -55,43 +68,30 @@ class OcaLlopBlat():
         " o bé només el pages si no se passa cap elemet.
         """
         element = element or "pages"
+    
+        if DEBUG:
+            print(f"Intentant transportar {element}")
 
-        print(f"Intentant transportar {element}")
         if self.estat["pages"] != self.estat[element]:
-            print(f"Falla! {element} no esta a la mateixa illa")
+            if DEBUG:
+                print(f"Falla! {element} no esta a la mateixa illa")
+
             return False
 
         self.estat["pages"] = not self.estat["pages"]
+
         if element != "pages":
             self.estat[element] = not self.estat[element]
-            print(f"Transportat {element} a {self.estat[element]}")
+            if DEBUG:
+                print(f"Transportat {element} a {self.estat[element]}")
         else:
-            print(f"Transportat pages")
+            if DEBUG:
+                print(f"Transportat pages")
 
         return True
 
 
-    def seguent(self):
-        print(f"Fent següent de {self}")
-        for element in ["pages", "llop", "oca", "blat"]:
-            print(element)
-            s = deepcopy(self)
-            if s.accio_transporta(element):
-                if self != s:
-                    if s not in self:
-                        if s.ningu_menja_ningu():
-                            s.cami.append(s)
-                            if s.final():
-                                print("Arribat!")
-                            print("No es final")
-                            return s.seguent()
-                        print("A")
-                    print("B")
-                print("C")
-            print("D")
-
-                    
-    def ningu_menja_ningu(self):
+    def algu_menja_algu(self):
         """
         " Mira si algú s'ha menjat algú
         """
@@ -101,35 +101,88 @@ class OcaLlopBlat():
         blat = self.estat["blat"]
 
         if llop == oca and pages != llop and blat != llop:
-            print("Llop sol amb l'oca: nyam!")
-            return False
+            if DEBUG:
+                print("Llop sol amb l'oca: nyam!")
+            return True
 
         if oca == blat and pages != oca and llop != oca:
-            print("Oca sola amb blat: nyam!")
-            return False
+            if DEBUG:
+                print("Oca sola amb blat: nyam!")
+            return True
 
-        print("Ningu menja ningu")
-        return True
+        if DEBUG:
+            print("Ningu menja ningu")
+
+        return False
 
 
     def final(self):
         """
         " Mira si hem arribat al final aconseguit l'objectiu
         """
-        return 0 not in self.estat.values()
+        return False not in self.estat.values()
 
 
+    def seguent(self):
+        if DEBUG:
+            print(f"Fent següents de {self}")
 
+        for element in ["pages", "llop", "oca", "blat"]:
+            s = deepcopy(self)
+            if s.accio_transporta(element):
+
+                carrega = representacio[element] if element != "pages" else ""
+                carrega = carrega or "" if EMOJIS else "res"
+
+                accio = f"🛥️  🧑{carrega}" if EMOJIS else f"duu {carrega}"
+
+                s.solucio.append(accio)
+                s.cami.append(self)
+
+                if s.final():
+                    s.solucio.append("🎊🎊🎊" if EMOJIS else "Final!")
+                    s.cami.append(s)
+
+                    global SOLUCIONS
+                    SOLUCIONS += 1
+                    print("ENHORABONA!")
+                    print("Una solució és:")
+                    for i in range(len(s.cami)):
+                        entorn = s.cami[i]
+                        moviment = s.solucio[i]
+                        print(f"  {entorn}")
+                        print(f"      {moviment}")
+                        print("-------------------")
+                    continue
+
+                if self == s:
+                    if DEBUG:
+                        print("INVALID: Estat invalid no hi ha moviment")
+                    continue
+
+                if s.algu_menja_algu():
+                    if DEBUG:
+                        print("INVALID: Algu es menjat")
+
+                    continue
+
+                if s in self:
+                    if DEBUG:
+                        print("INVALID: Estat repetit")
+
+                    continue
+
+                s.seguent()
 
 
 if __name__=='__main__':
     print("""Oca llop blat
 
-Un pages esta a una illa on hi ha una oca una llop i blat.
+Un pages esta a una illa on hi ha una oca, un llop i blat.
 
 Tots han de creuar a l'altre illa.
 
-El pages es l'unic que pot dur la barca i només pot transportar una cosa a la vegada.
+El pages és l'unic que pot dur la barca i només pot transportar una cosa a la vegada.
 
 Si el llop queda sol amb l'oca se la menja.
 
@@ -139,9 +192,6 @@ Es possible que tots creuin? Com?
     """)
 
     olb = OcaLlopBlat()
-
-    print(olb)
     olb.seguent()
 
-
-
+    print(f"S'han trobat {SOLUCIONS} solucuons.")
