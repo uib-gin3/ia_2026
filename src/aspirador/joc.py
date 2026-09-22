@@ -7,37 +7,41 @@ class Aspirador(joc.JocNoGrafic):
             agents = []
 
         super(Aspirador, self).__init__(agents=agents)
-        self.position = "a"
-        self.rooms = {
-            "a": {
-                "dirty": True
-             }
-            "b": {
-                "dirty": True
-            }
-        }
+        self.posicio = 0
+        self.habitacions = (False, False)
+
 
     def _draw(self):
-        for room, status in self.rooms.items():
-            status = "dirty" if status[dirty] else "clean"
-            print(f"Room {room} is {status}")
+        output = ""
+
+        brutor = "💩"
+        aspirador = "🤖"
+
+        for i in range(2):
+            output += aspirador if i == self.posicio else ' '
+
+        output += '\n'
+
+        for i in range(2):
+            output += brutor if self.habitacions[i] else ' '
+
+        print(output)
 
     def percepcio(self):
         return {
-            "position": self.positon
-            "status": self.rooms[self.position]
+            "Loc": self.posicio,
+            "Net": self.habitacions[self.posicio],
         }
 
     def _aplica(self, accio, params=None, agent_actual=None):
+        if accio == 'A':
+            self.habitacions[self.posicio] = True
+            return
 
-        if accio == "clean":
-            self.rooms[self.position]["dirty"] = False
+        if accio == 'D':
+            self.posicio = 1
+            return 
 
-        elif accio == "move":
-            self.position = params["position"]
-
-        elif accio == "check":
-            for status in self.rooms.values():
-                if status["dirty"]:
-                    return False
-            return True
+        if accio == 'E':
+            self.posicio = 0
+            return
