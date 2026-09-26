@@ -1,31 +1,46 @@
 #!/usr/bin/env python3
 
+from copy import deepcopy
+
 M = 0
 C = 1
 B = 3
 
-size = 6
 
 class Canibals:
-    def __init__(self):
-        self.state = (int(size/2), int(size/2), False)
-        self.visited = []
+    def __init__(self, state=None, size=6):
+        """ Inicializes the environment """
+
+        self.size = size
+
+        # Number of missioners and canibals on the left and
+        # if boat is on the left or not.
+        self.state = state or (int(size/2), int(size/2), False)
 
     def __repr__(self):
+        """ Print the current state of the enviroment """
+
         rc = '🧟'
         rm = '🧔'
         rb = '🛥️'
 
         print(self.state)
-        output = list([rm] * self.state[M] + [' '] * (int(size/2) - self.state[M]))
-        output += list([rc] * self.state[C] + [' '] * (int(size/2) - self.state[C]))
+        output = list([rm] * self.state[M] + [' '] * (int(self.size/2) - self.state[M]))
+        output += list([rc] * self.state[C] + [' '] * (int(self.size/2) - self.state[C]))
         output += ['🌊']
-        output += list([rm] * (int(size/2) - self.state[M]) + [' '] * self.state[M])
-        output += list([rc] * (int(size/2) - self.state[C]) + [' '] * self.state[C])
+        output += list([rm] * (int(self.size/2) - self.state[M]) + [' '] * self.state[M])
+        output += list([rc] * (int(self.size/2) - self.state[C]) + [' '] * self.state[C])
 
         return "".join(output)
 
-    def move(self, m=0, c=0):
+    def do(self, m=0, c=0):
+        """ Apply action that modifies the environment
+        " moves m missioners and or c canibals
+        " from one side to another.
+        " Also moves the boat
+        " @return true if valid action and state. False otherwise
+        """
+
         if m == 0 and c == 0:
             return False
 
@@ -40,26 +55,64 @@ class Canibals:
         self.state[C] = new_c
 
         self.state[B] = not self.state[B]
-        return True
+        return self.valid()
 
-    def valid_state(self):
+    def actions(self):
+        # TODO adapt to size
+        return ( (2, 0), (0, 2), (1, 1), (1, 0), (0, 1) )
+
+    def valid(self):
+        """ Checks if the state is valid """
         return self.state[M] >= self.state[C] 
 
     def final(self):
+        """ Checks if the state is final """
         return self.state[M] == 0 and self.state[C] == 0
+
+    def score(self, state):
+        """ Return the score of the given state """
+        pass
         
-    def search(self):
-
-        possible_actions = ( (2, 0), (0, 2), (1, 1), (1, 0), (0, 1) )
 
 
-        print(self)
+class AgentBF:
+
+    def __init__(self, Environment):
+
+        self.Environment = Environment
+        self.visited = ()
+
+
+    def search(self, queue):
+
+        if not self.queue:
+            # No solution found
+            return []
+
+
+        state, path = queue.pop()
+
+        if state.final():
+            # Reached a final state!
+            return path + [state]
+
+        for action in self.Environment.actions():
+            new_state = self.Environment(state)
+            
+            if new_state.do(*action):
+                # Breadth first, insert at the begining of the queue
+                # so all the same level is done first before deeping
+                # into the next level
+                queue.insert(0, (state, queue))
+
+                self.search(queue)
+
 
 
 if __name__=='__main__':
 
     print("Nyam Nyam")
-    canibals = Canibals()
 
-    canibals.search()
+    agent = AgentBF(Canibals)
 
+    agent.search()
