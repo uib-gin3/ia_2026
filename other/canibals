@@ -1,64 +1,71 @@
 #!/usr/bin/env python3
 
-from copy import deepcopy
+from sys import argv
 
 M = 0
 C = 1
-B = 3
-
+B = 2
 
 class Canibals:
-    def __init__(self, state=None, size=6):
+    def __init__(self, state=[], size=6):
         """ Inicializes the environment """
 
         self.size = size
 
-        # Number of missioners and canibals on the left and
-        # if boat is on the left or not.
-        self.state = state or (int(size/2), int(size/2), False)
+        # Number of missioners and canibals on the left side of the river
+        # and if boat is on the left or not.
+        self.state = list(state) or [int(size/2), int(size/2), False]
 
     def __repr__(self):
-        """ Print the current state of the enviroment """
+        """ Print the current state"""
 
         rc = '🧟'
         rm = '🧔'
-        rb = '🛥️'
 
-        print(self.state)
-        output = list([rm] * self.state[M] + [' '] * (int(self.size/2) - self.state[M]))
-        output += list([rc] * self.state[C] + [' '] * (int(self.size/2) - self.state[C]))
+        output = list([rm] * self.state[M] + ['  '] * (int(self.size/2) - self.state[M]))
+        output += list([rc] * self.state[C] + ['  '] * (int(self.size/2) - self.state[C]))
         output += ['🌊']
-        output += list([rm] * (int(self.size/2) - self.state[M]) + [' '] * self.state[M])
-        output += list([rc] * (int(self.size/2) - self.state[C]) + [' '] * self.state[C])
+        output += list([rm] * (int(self.size/2) - self.state[M]) + ['  '] * self.state[M])
+        output += list([rc] * (int(self.size/2) - self.state[C]) + ['  '] * self.state[C])
 
         return "".join(output)
 
+    def __eq__(self, other):
+        """ Compares states """
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.state == other.state
+
+
     def do(self, m=0, c=0):
-        """ Apply action that modifies the environment
-        " moves m missioners and or c canibals
-        " from one side to another.
-        " Also moves the boat
-        " @return true if valid action and state. False otherwise
+        """ Apply action:
+        " Moves m missioners and or c canibals from one side to another.
+        " Also moves the boat.
+        "
+        " @return True if valid action, False otherwise
         """
 
         if m == 0 and c == 0:
             return False
 
-        new_m = self.state[M] - m
-        if new_m < 0:
-            return False
-        self.state[M] = new_m
-        
-        new_c = self.state[C] - c
-        if new_c < 0:
-            return False
-        self.state[C] = new_c
+        if self.state[B]:
+            new_m = self.state[M] + m
+            new_c = self.state[C] + c
+        else:
+            new_m = self.state[M] - m
+            new_c = self.state[C] - c
 
+        if new_m < 0 or new_c < 0 or new_m > 3 or new_c > 3:
+            return False
+
+        self.state[M] = new_m
+        self.state[C] = new_c
         self.state[B] = not self.state[B]
-        return self.valid()
+
+        return True
 
     def actions(self):
-        # TODO adapt to size
         return ( (2, 0), (0, 2), (1, 1), (1, 0), (0, 1) )
 
     def valid(self):
@@ -77,42 +84,73 @@ class Canibals:
 
 class AgentBF:
 
-    def __init__(self, Environment):
+    def __init__(self, debug=False):
 
-        self.Environment = Environment
-        self.visited = ()
+        self.debug = debug
+        self.visited = []
 
 
     def search(self, queue):
 
-        if not self.queue:
-            # No solution found
-            return []
+        if debug: print(f"Searching:\n{queue}")
 
+        if not queue:
+            if debug: print("No solution found!")
+            return [], []
 
-        state, path = queue.pop()
+        (path, state, decisions) = queue.pop()
+
+        if state in self.visited:
+            if debug: print(f"Already visited state: {state}")
+            return [], []
 
         if state.final():
-            # Reached a final state!
-            return path + [state]
+            if debug: print(f"Reached a FINAL state! {state}")
+            return (path + [state], decisions)
 
-        for action in self.Environment.actions():
-            new_state = self.Environment(state)
-            
-            if new_state.do(*action):
+        if self.debug: print(f"Visiting {state}")
+        self.visited.append(state)
+
+        for action in state.actions():
+            if self.debug: print(f"Applying {action} to: {state}")
+
+            next_state = type(state)(state=state.state)
+
+            valid_action = next_state.do(*action)
+            if not valid_action:
+                if debug: print("Invalid action at current state, skipping.")
+                continue
+
+            if next_state.valid():
                 # Breadth first, insert at the begining of the queue
                 # so all the same level is done first before deeping
                 # into the next level
-                queue.insert(0, (state, queue))
 
-                self.search(queue)
+                if debug: print(f"New state is {next_state} is valid, queueing it!")
 
+                updated_path = path + [state]
+                updated_decisions = decisions + [action]
+                queue.insert(0, (updated_path, next_state, updated_decisions))
+            else:
+                if debug: print(f"New state is {next_state} is invalid, discarting.")
+
+        return self.search(queue)
 
 
 if __name__=='__main__':
 
     print("Nyam Nyam")
 
-    agent = AgentBF(Canibals)
+    debug = '--debug' in argv
 
-    agent.search()
+    agent = AgentBF(debug=debug)
+
+    initial = Canibals()
+    queue = [([], initial, []), ]
+
+    solution, actions = agent.search(queue)
+
+    for i in range(len(solution)):
+        print(solution[i])
+        print(actions[i])
+
