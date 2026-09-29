@@ -101,6 +101,7 @@ class AgentBF:
             if debug: print("No solution found!")
             return [], []
 
+        # Inserts at he begining pops from the end so FIFO -> BF
         (path, state, decisions) = queue.pop()
 
         if state in self.visited:
@@ -127,7 +128,7 @@ class AgentBF:
             if next_state.valid():
                 # Breadth first, insert at the begining of the queue
                 # so all the same level is done first before deeping
-                # into the next level
+                # into the next level. Poping from the end, so FIFO
 
                 if debug: print(f"New state is {next_state} is valid, queueing it!")
 
