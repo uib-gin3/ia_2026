@@ -6,6 +6,8 @@ M = 0
 C = 1
 B = 2
 
+debug = True
+
 class Canibals:
     def __init__(self, state=[], size=6):
         """ Inicializes the environment """
@@ -47,6 +49,7 @@ class Canibals:
         """
 
         if m == 0 and c == 0:
+            if debug: print("Invalid action, no one in the boat")
             return False
 
         if self.state[B]:
@@ -135,7 +138,6 @@ class AgentBF:
                 if debug: print(f"New state is {next_state} is invalid, discarting.")
 
         return self.search(queue)
-
 
 if __name__=='__main__':
 
